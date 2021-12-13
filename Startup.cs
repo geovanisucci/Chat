@@ -63,9 +63,17 @@ namespace Chat
                 endpoints.MapRazorPages();
             });
             //Aqui indicaremos nossas rotas para nossos hubs
-            app.UseSignalR(routes =>
+            // app.UseSignalR(routes =>
+            // {
+            //     routes.MapHub<ChatHub>("/chat");
+            // });
+             app.UseEndpoints(endpoints =>
             {
-                routes.MapHub<ChatHub>("/chat");
+                endpoints.MapControllerRoute(
+                    name: "default",
+                    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+                endpoints.MapHub<ChatHub>("/chat");
             });
         }
     }
