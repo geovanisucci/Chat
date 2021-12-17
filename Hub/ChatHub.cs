@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Chat.Interfaces;
 using System.Text.Json;
 using System;
+using System.Linq;
 
 namespace Chat.Hubs
 {
@@ -21,15 +22,27 @@ namespace Chat.Hubs
         public override Task OnConnectedAsync()
         {
             var userQuery = JsonSerializer.Deserialize<User>(Context.GetHttpContext().Request.Query["user"]);
+           
             var user = _repository.Add(Context.ConnectionId, userQuery);
             //Ao usar o método All eu estou enviando a mensagem para todos os usuários conectados no meu Hub
-            Clients.All.SendAsync("chat", _repository.GetUsers(), user);
+            //Clients.All.SendAsync("chat", _repository.GetUsers(), user);
+            // if (user.name.Contains("CLIENTE"))
+            // {
+            //     Clients.Client(user.connectionHost).SendAsync("chat", _repository.GetUsers().Where(x => x.name.Contains("CANAL")).ToList(), user);
+            // }
+            var vendedores = _repository.GetUsers().Where(x => x.name.Contains("CANAL")).ToList();
+            if (vendedores != null)
+            {
+                Clients.Clients(vendedores.Select(x => x.connectionHost)).SendAsync("chat", _repository.GetUsers().Where(x => x.name.Contains("CLIENTE")).ToList(), user);
+            }
+
             return base.OnConnectedAsync();
         }
 
         public override Task OnDisconnectedAsync(System.Exception exception)
         {
             _repository.Disconnect(Context.ConnectionId);
+
             Clients.All.SendAsync("chat", _repository.GetUsers());
 
             return base.OnDisconnectedAsync(exception);
@@ -48,6 +61,8 @@ namespace Chat.Hubs
                 return;
             }
             var connection = _repository.GetUserByKey(chat.toId).connectionHost;
+
+
             await Clients.Client(connection).SendAsync("Receive", chat.from, chat.message);
         }
     }
