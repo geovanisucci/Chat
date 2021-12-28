@@ -1,4 +1,4 @@
-﻿$(document).ready(function() {
+$(document).ready(function() {
   window.chat = createChatController();
   window.chat.loadUser();
 });
@@ -7,7 +7,8 @@ function createChatController() {
   var user = {
     name: null,
     dtConnection: null,
-    key: null
+    key: null,
+    group: null
   };
 
   return {
@@ -18,8 +19,12 @@ function createChatController() {
         "Digite seu apelido para entrar no chat",
         "Usuário"
       );
+      this.state.group = prompt(
+        "Digite o grupo (cliente ou vendedor)",
+        "Grupo"
+      );
       this.state.dtConnection = new Date();
-      this.state.key = new Date().valueOf();
+      this.state.key = new Date().valueOf().toString();
       this.connectUserToChat();
     },
     connectUserToChat: function() {
@@ -30,7 +35,7 @@ function createChatController() {
       var chatMessage = {
         from: this.state,
         message: to.message,
-        toId: to.destination
+        toId: to.destination.toString()
       };
 
       //Esse trecho é responsável por encaminhar a mensagem para o usuário selecionado
@@ -40,7 +45,7 @@ function createChatController() {
 
       //Método responsável por inserir a mensagem no chat
       insertMessage(
-        chatMessage.toId,
+        chatMessage.toId.toString(),
         "me",
         chatMessage.message,
         chatMessage.from.name
@@ -64,7 +69,7 @@ function createChatController() {
 async function startConnection(chat) {
   try {
     chat.connection = new signalR.HubConnectionBuilder()
-      .withUrl("/chat?user=" + JSON.stringify(window.chat.state))
+      .withUrl("http://localhost:5000/chat?user=" + JSON.stringify(window.chat.state))
       .build();
     await chat.connection.start();
 
